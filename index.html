@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090909">
+  <title>추리파일</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <section class="start-screen" id="startScreen" aria-label="게임 시작 화면">
+      <div class="grain" aria-hidden="true"></div>
+      <div class="start-copy">
+        <p class="case-label">CASE FILE 001 · CLASSIFIED</p>
+        <p class="instruction">이미지를 클릭하여 사건을 시작하세요</p>
+        <button class="start-image-button" id="startButton" type="button" aria-label="추리파일 게임 시작">
+          <img src="start/ChatGPT Image 2026년 8월 24일 오후 09_35_17.png" alt="추리파일 게임 시작 이미지">
+          <span class="click-ring" aria-hidden="true"><span>START</span></span>
+        </button>
+        <p class="sound-note"><span class="sound-dot"></span> SOUND ON · 헤드폰 권장</p>
+      </div>
+      <div class="corner-mark corner-mark--top">ARCHIVE / 00:00</div>
+      <div class="corner-mark corner-mark--bottom">NO ONE LEAVES WITHOUT A SECRET</div>
+    </section>
+
+    <section class="briefing-screen" id="briefingScreen" aria-hidden="true">
+      <div class="briefing-topline"><span>CASE FILE 001</span><span>STATUS: OPEN</span></div>
+      <div class="briefing-content">
+        <p class="eyebrow">THE FIRST CLUE</p>
+        <h1>사라진 밤의<br><em>목격자</em></h1>
+        <p class="briefing-text">자정이 되기 11분 전, 도시에서 가장 오래된 극장의 보관실이 열렸다. 문은 안쪽에서 잠겨 있었고, 현장에는 낡은 카세트테이프 하나만 남아 있었다.</p>
+        <div class="evidence-line"><span>단서 01</span><span class="line"></span><span>음성 기록</span></div>
+        <button class="enter-button" id="enterButton" type="button">수사 기록 열기 <span aria-hidden="true">↗</span></button>
+      </div>
+      <div class="briefing-footer"><span>추리파일</span><span>CONFIDENTIAL</span></div>
+    </section>
+
+    <section class="board-screen" id="boardScreen" aria-hidden="true">
+      <div class="board-header">
+        <div><span class="board-kicker">CASE FILE 001 / INVESTIGATION BOARD</span><h2>수사 기록</h2></div>
+        <div class="board-stats"><span>의뢰 <b>0</b></span><span>신뢰 <b>0</b></span><span>수첩 <b>0/30</b></span></div>
+      </div>
+      <div class="board-intro"><span>01</span><p>현장을 선택해 직접 조사하세요.<br>모든 단서는 수첩에 기록됩니다.</p></div>
+      <div class="location-grid">
+        <button class="location-card" type="button"><span class="location-number">01</span><strong>극장 보관실</strong><small>잠긴 문과 남겨진 카세트</small><em>조사 가능 →</em></button>
+        <button class="location-card" type="button"><span class="location-number">02</span><strong>극장 복도</strong><small>오래된 직원 근무표</small><em>조사 가능 →</em></button>
+        <button class="location-card" type="button"><span class="location-number">03</span><strong>극장 뒷골목</strong><small>찢어진 메모와 낯선 흔적</small><em>조사 가능 →</em></button>
+      </div>
+      <div class="board-footer"><span>NOTEBOOK 0/30</span><div class="board-actions"><button id="evidenceNoteButton" type="button">증거노트</button><button id="submitAnswerButton" type="button">정답 제출</button></div></div>
+    </section>
+
+    <section class="evidence-note-screen" id="evidenceNoteScreen" aria-hidden="true">
+      <button class="note-close-button" id="closeEvidenceNoteButton" type="button" aria-label="증거노트 닫기">×</button>
+      <div class="evidence-note-paper">
+        <div class="note-heading"><span>CASE FILE 001</span><h2>증거노트</h2><small>수사 기록 / 개인 메모</small></div>
+        <div class="note-grid" id="noteGrid"><p class="note-empty">아직 기록된 증거가 없습니다.<br><small>현장에서 증거 사진을 조사하면 이곳에 추가됩니다.</small></p></div>
+        <div class="note-footer"><span id="noteCount">발견한 단서 0 / 6</span><span>WRITE YOUR THEORY</span></div>
+      </div>
+    </section>
+  </main>
+  <audio id="caseMusic" loop preload="auto">
+    <source src="start/mondamusic-spy-detective-robbery-music-491671.mp3" type="audio/mpeg">
+  </audio>
+  <script src="script.js"></script>
+</body>
+</html>
