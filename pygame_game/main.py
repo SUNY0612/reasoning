@@ -8,7 +8,7 @@ from pathlib import Path
 import sys
 import pygame
 
-from data.case001 import CASE_CODE, CASE_SUMMARY, CASE_TITLE, EVIDENCE, LOCATIONS
+from data.case001 import CASE_CODE, CASE_SUMMARY, CASE_TITLE, EVIDENCE, LOCATIONS, SUSPECTS
 
 pygame.init()
 pygame.font.init()
@@ -49,6 +49,7 @@ selected_evidence = None
 popup_mode = None
 answer_choice = None
 result_correct = False
+selected_suspect = None
 collected_ids = set()
 notebook_ids = []
 
@@ -140,7 +141,7 @@ def draw_case_file():
     draw_text("사건 개요", (75, 330), FONT_SMALL, RED)
     draw_text(CASE_SUMMARY, (75, 370), FONT_BODY, INK, 630, 10)
     draw_text("STATUS: OPEN", (900, 175), FONT_SMALL, RED)
-    draw_text("조사 가능한 장소 3곳\n수집 가능한 단서 6개", (900, 225), FONT_BODY, MUTED, 260)
+    draw_text(f"조사 가능한 장소 3곳\n수집 가능한 단서 {len(EVIDENCE)}개", (900, 225), FONT_BODY, MUTED, 260)
     button(pygame.Rect(75, 555, 220, 48), "수사 기록 보기", accent=True)
 
 
@@ -167,10 +168,12 @@ def draw_board():
         x = 55 + index * 390
         location_card(location, pygame.Rect(x, 235, 350, 245))
     notebook_button = pygame.Rect(55, 560, 170, 44)
+    interview_button = pygame.Rect(245, 560, 170, 44)
     answer_button = pygame.Rect(WIDTH - 225, 560, 170, 44)
     button(notebook_button, f"수첩  {len(notebook_ids)}/30")
+    button(interview_button, "용의자 인터뷰")
     button(answer_button, "정답 제출", accent=True)
-    draw_text(f"발견한 단서 {len(collected_ids)} / 6", (255, 575), FONT_SMALL, PAPER_DARK)
+    draw_text(f"발견한 단서 {len(collected_ids)} / {len(EVIDENCE)}", (435, 575), FONT_SMALL, PAPER_DARK)
 
 
 def draw_placeholder_background(location):
@@ -210,7 +213,6 @@ def draw_location():
     background = load_image(location["background"], (WIDTH, HEIGHT))
     if background:
         screen.blit(background, (0, 0))
-        pygame.draw.rect(screen, (0, 0, 0), (0, 0, WIDTH, HEIGHT), 0)
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         overlay.fill((15, 14, 12, 72))
         screen.blit(overlay, (0, 0))
@@ -232,15 +234,45 @@ def draw_notebook():
     draw_text("수첩", (65, 120), FONT_TITLE, INK)
     draw_text("발견하지 않은 단서는 ???로 표시됩니다.", (68, 180), FONT_SMALL, MUTED)
     for index, evidence in enumerate(EVIDENCE):
-        y = 235 + index * 62
-        pygame.draw.line(screen, PAPER_DARK, (68, y + 45), (WIDTH - 68, y + 45), 1)
+        column, row = divmod(index, 6)
+        x, y = 68 + column * 590, 225 + row * 68
+        pygame.draw.line(screen, PAPER_DARK, (x, y + 51), (x + 540, y + 51), 1)
         if evidence["id"] in notebook_ids:
-            draw_text(f"단서 {index + 1:02d}   ✓", (75, y), FONT_SMALL, RED)
-            draw_text(f"{evidence['name']}  →  {evidence['clue']}", (250, y), FONT_SMALL, INK, 850)
+            draw_text(f"단서 {index + 1:02d}   ✓", (x + 7, y), FONT_SMALL, RED)
+            draw_text(f"{evidence['name']}\n{evidence['clue']}", (x + 115, y), FONT_TINY, INK, 415, 3)
         else:
-            draw_text(f"단서 {index + 1:02d}   ???", (75, y), FONT_SMALL, MUTED)
-            draw_text("아직 발견하지 않음", (250, y), FONT_SMALL, MUTED)
+            draw_text(f"단서 {index + 1:02d}   ???", (x + 7, y), FONT_SMALL, MUTED)
+            draw_text("아직 발견하지 않음", (x + 115, y), FONT_SMALL, MUTED)
     button(pygame.Rect(68, HEIGHT - 65, 130, 40), "사건판으로")
+
+
+def draw_interviews():
+    screen.fill(PAPER)
+    top_bar("용의자 인터뷰", False)
+    draw_text("용의자 인터뷰", (65, 112), FONT_TITLE, INK)
+    draw_text("각자의 거짓말에는 이유가 있습니다. 기록과 진술을 비교하세요.", (68, 170), FONT_SMALL, MUTED)
+    for index, suspect in enumerate(SUSPECTS):
+        rect = pygame.Rect(68, 225 + index * 125, 1140, 100)
+        pygame.draw.rect(screen, (222, 211, 188), rect, border_radius=4)
+        pygame.draw.rect(screen, PAPER_DARK, rect, 1, border_radius=4)
+        draw_text(suspect["name"], (rect.x + 24, rect.y + 17), FONT_BODY, INK)
+        draw_text(suspect["role"], (rect.x + 24, rect.y + 49), FONT_TINY, RED)
+        draw_text(suspect["summary"], (rect.x + 260, rect.y + 27), FONT_SMALL, INK, 520)
+        button(pygame.Rect(rect.right - 150, rect.y + 28, 120, 40), "인터뷰")
+    button(pygame.Rect(68, HEIGHT - 65, 130, 40), "사건판으로")
+
+
+def draw_interview_detail():
+    screen.fill(PAPER)
+    top_bar("인터뷰 기록", False)
+    suspect = selected_suspect
+    draw_text(suspect["name"], (72, 115), FONT_TITLE, INK)
+    draw_text(suspect["role"], (75, 175), FONT_SMALL, RED)
+    pygame.draw.line(screen, PAPER_DARK, (72, 210), (WIDTH - 72, 210), 1)
+    draw_text(suspect["interview"], (75, 245), FONT_BODY, INK, 875, 12)
+    draw_text("수사관 메모", (75, 480), FONT_SMALL, RED)
+    draw_text(suspect["verdict"], (75, 520), FONT_BODY, INK, 800)
+    button(pygame.Rect(75, HEIGHT - 65, 160, 40), "인터뷰 목록으로")
 
 
 def draw_answer():
@@ -295,7 +327,7 @@ def show_popup():
 
 
 def click_position(position):
-    global state, current_location, selected_evidence, popup_mode, answer_choice, result_correct
+    global state, current_location, selected_evidence, popup_mode, answer_choice, result_correct, selected_suspect
     x, y = position
     if state == "home":
         if pygame.Rect(650, 455, 190, 45).collidepoint(position):
@@ -311,6 +343,8 @@ def click_position(position):
                 return
         if pygame.Rect(55, 560, 170, 44).collidepoint(position):
             state = "notebook"
+        elif pygame.Rect(245, 560, 170, 44).collidepoint(position):
+            state = "interviews"
         elif pygame.Rect(WIDTH - 225, 560, 170, 44).collidepoint(position):
             state = "answer"
     elif state == "location":
@@ -325,6 +359,17 @@ def click_position(position):
     elif state == "notebook":
         if pygame.Rect(68, HEIGHT - 65, 130, 40).collidepoint(position):
             state = "board"
+    elif state == "interviews":
+        for index, suspect in enumerate(SUSPECTS):
+            if pygame.Rect(WIDTH - 150, 253 + index * 125, 120, 40).collidepoint(position):
+                selected_suspect = suspect
+                state = "interview_detail"
+                return
+        if pygame.Rect(68, HEIGHT - 65, 130, 40).collidepoint(position):
+            state = "board"
+    elif state == "interview_detail":
+        if pygame.Rect(75, HEIGHT - 65, 160, 40).collidepoint(position):
+            state = "interviews"
     elif state == "answer":
         choices = ["서준호", "박지현", "이도현", "외부인"]
         for index, choice in enumerate(choices):
@@ -361,14 +406,14 @@ def click_popup(position):
 def draw_current_screen():
     screens = {"home": draw_home, "case_file": draw_case_file, "board": draw_board,
                "location": draw_location, "notebook": draw_notebook, "answer": draw_answer,
-               "result": draw_result}
+               "result": draw_result, "interviews": draw_interviews, "interview_detail": draw_interview_detail}
     screens[state]()
     if popup_mode == "inspect":
         show_popup()
 
 
 def main():
-    global screen, WIDTH, HEIGHT, popup_mode
+    global screen, WIDTH, HEIGHT, popup_mode, state
     running = True
     while running:
         for event in pygame.event.get():
@@ -382,8 +427,10 @@ def main():
                     popup_mode = None
                 elif state == "location":
                     state = "board"
-                elif state in {"notebook", "answer", "result"}:
+                elif state in {"notebook", "answer", "result", "interviews"}:
                     state = "board"
+                elif state == "interview_detail":
+                    state = "interviews"
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if popup_mode:
                     click_popup(event.pos)
